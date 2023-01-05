@@ -123,7 +123,46 @@ provinces = [
     "zh_zang", "藏",
     "zh_zhe", "浙"
 ]
+class StatModel(object):
+    def load(self, fn):
+        self.model = self.model.load(fn)
 
+    def save(self, fn):
+        self.model.save(fn)
+
+
+class SVM(StatModel):
+    def __init__(self, C=1, gamma=0.5):
+        self.model = cv2.ml.SVM_create()
+        self.model.setGamma(gamma)
+        self.model.setC(C)
+        self.model.setKernel(cv2.ml.SVM_RBF)
+        self.model.setType(cv2.ml.SVM_C_SVC)
+
+    # 训练svm
+    def train(self, samples, responses):
+        self.model.train(samples, cv2.ml.ROW_SAMPLE, responses)
+
+    # 字符识别
+    def predict(self, samples):
+        r = self.model.predict(samples)
+        return r[1].ravel()
+
+
+class CardPredictor:
+    def __init__(self):
+        # 车牌识别的部分参数保存在js中，便于根据图片分辨率做调整
+        f = open('config.js')
+        j = json.load(f)
+        for c in j["config"]:
+            if c["open"]:
+                self.cfg = c.copy()
+                break
+        else:
+            raise RuntimeError('没有设置有效配置参数')
+
+    def __del__(self):
+        self.save_traindata()
 
 
 
